@@ -1,4 +1,4 @@
-## QED
+# QED
 
 Write mathematical proofs in notebooks online.
 
