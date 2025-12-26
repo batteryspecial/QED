@@ -1,4 +1,12 @@
-.editor:empty:before {
-  content: 'Where will our proof begin...';
-  color: #666;
+[data-slate-zero-width] {
+  position: relative;
+  display: inline-block;
+  width: 0;
+}
+
+[data-slate-zero-width]:before {
+  content: '';
+  position: absolute;
+  width: 1px;
+  height: 1em;
 }
