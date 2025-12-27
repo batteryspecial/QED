@@ -1,12 +1,10 @@
-[data-slate-zero-width] {
-  position: relative;
-  display: inline-block;
-  width: 0;
+/* Hide scrollbar for Chrome, Safari and Opera */
+.editor::-webkit-scrollbar {
+  display: none;
 }
 
-[data-slate-zero-width]:before {
-  content: '';
-  position: absolute;
-  width: 1px;
-  height: 1em;
+/* Hide scrollbar for IE, Edge and Firefox */
+.editor {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
