@@ -1,5 +1,5 @@
-import ProofCanvas from './src/sections/ProofCanvas.jsx'
-import TestCommandInputComponent from './src/components/TestCommandInput.jsx'
+import ProofCanvas from './sections/ProofCanvas'
+import TestCommandInputComponent from './components/TestCommandInput.jsx'
 
 export default function Home() {
   return (

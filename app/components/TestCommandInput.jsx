@@ -1,133 +1,93 @@
 'use client'
 import { useMemo, useCallback, useState, useEffect, useRef } from 'react'
-import { createEditor, Editor, Range, Transforms, Node } from 'slate'
-import { Slate, Editable, withReact, ReactEditor } from 'slate-react'
+import { createEditor, Editor, Range, Transforms, Node, Path } from 'slate'
+import { Slate, Editable, withReact, ReactEditor, useSelected, useFocused } from 'slate-react'
+import { withHistory } from 'slate-history'
 
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 
-import { withHistory } from 'slate-history'
-import CommandInput from './CommandInput'
+import CommandInput from '../components/CommandInput'
+import { commands } from '../../lib/command/CommandList.js'
+import { parseCommandToLatex } from '../../lib/command/CommandParser.js'
+import { withCommandInput } from '../../lib/command/CommandInline.js'
 
 import '../sections/canvas.css'
 
 /**
- * Sample commands list
+ * Simple LaTeX renderer for command symbols
  */
-const commands = [
-    {
-            command: 'forall',
-            symbol: '\\forall',  // LaTeX syntax for KaTeX
-            description: 'for all'
-        },
-        {
-            command: 'exists',
-            symbol: '\\exists',
-            description: 'there exists'
-        },
-        {
-            command: 'and',
-            symbol: '\\wedge',
-            description: 'logical and'
-        },
-        {
-            command: 'or',
-            symbol: '\\vee',
-            description: 'logical or'
-        },
-        {
-            command: 'neg',
-            symbol: '\\neg',
-            description: 'negation'
-        },
-        {
-            command: 'element',
-            symbol: '\\in',
-            description: 'an element of'
-        },
-        {
-            command: 'equiv',
-            symbol: '\\equiv',
-            description: 'congruent to'
-        },
-        {
-            command: 'Implies',
-            symbol: '\\rightarrow',
-            description: 'implication'
-        },
-        {
-            command: 'Iff',
-            symbol: '\\leftrightarrow',
-            description: 'if and only if'
-        },
-        {
-            command: 'naturals',
-            symbol: '\\mathbb{N}',
-            description: 'natural numbers'
-        },
-        {
-            command: 'pint',
-            symbol: '\\mathbb{Z}^+',
-            description: 'positive integers'
-        },
-        {
-            command: 'nint',
-            symbol: '\\mathbb{Z}^-',
-            description: 'negative integers'
-        },
-        {
-            command: 'int',
-            symbol: '\\mathbb{Z}',
-            description: 'integers'
-        },
-        {
-            command: 'rational',
-            symbol: '\\mathbb{Q}',
-            description: 'rational numbers'
-        },
-        {
-            command: 'irrational',
-            symbol: '\\mathbb{Q}^c',
-            description: 'irrational numbers'
-        },
-        {
-            command: 'real',
-            symbol: '\\mathbb{R}',
-            description: 'real numbers'
-        },
-        {
-            command: 'complex',
-            symbol: '\\mathbb{C}',
-            description: 'complex numbers'
-        }
-]
+function RenderSymbol({ latex }) {
+    const symbolRef = useRef(null)
 
-/**
- * Extend Slate to recognize command-input as an inline element
- * IMPORTANT: command-input is NON-VOID (users can type in it)
- */
-function withCommandInput(editor) {
-    const { isInline } = editor
-    
-    editor.isInline = element => {
-        return element.type === 'command-input' ? true : isInline(element)
-    }
-    
-    return editor
+    useEffect(() => {
+        if (symbolRef.current) {
+            katex.render(latex, symbolRef.current, {
+                throwOnError: false,
+                displayMode: false,
+            })
+        }
+    }, [latex])
+
+    return <div ref={symbolRef}></div>
 }
 
 /**
- * Test component with a static command-input already in the document
+ * MathElement - Renders inline LaTeX math symbols
+ * This is a VOID inline element (no editable children)
+ */
+function MathElement({ attributes, element, children }) {
+    const ref = useRef(null)
+    const selected = useSelected()
+    const focused = useFocused()
+
+    useEffect(() => {
+        if (ref.current) {
+            katex.render(element.latex, ref.current, {
+                throwOnError: false,
+                displayMode: false,
+            })
+        }
+    }, [element.latex])
+
+    return (
+        <span 
+            {...attributes} 
+            contentEditable={false} 
+            className={`relative inline-flex items-center rounded-md select-none -my-1 ${
+                selected && focused ? 'ring-1 ring-blue-500' : ''
+            }`} 
+            style={{ verticalAlign: 'middle' }}
+        >
+            {/* Visible LaTeX Content */}
+            <span ref={ref} contentEditable={false} />
+
+            {/* Void Anchor - invisible but required for Slate cursor */}
+            <span style={{ position: 'absolute', opacity: 0, fontSize: 0 }}>
+                {children}
+            </span>
+        </span>
+    )
+}
+
+/**
+ * Test component for CommandInput functionality
  */
 export default function TestCommandInput() {
     const [showCommands, setShowCommands] = useState(false)
     const [commandPos, setCommandPos] = useState(null)
     const [activeCommandInputPath, setActiveCommandInputPath] = useState(null)
     
-    const editor = useMemo(() => 
-        withHistory(withCommandInput(withReact(createEditor()))), 
-        []
-    )
+    const editor = useMemo(() => {
+        const e = withHistory(withCommandInput(withReact(createEditor())))
+        
+        // Extend to recognize math as inline void element
+        const { isInline, isVoid } = e
+        e.isInline = element => element.type === 'math' ? true : isInline(element)
+        e.isVoid = element => element.type === 'math' ? true : isVoid(element)
+        
+        return e
+    }, [])
     
     // Initial value with a command-input element already inserted
     const initialValue = useMemo(() => [
@@ -196,24 +156,6 @@ export default function TestCommandInput() {
     }, [editor])
 
     /**
-     * Simple LaTeX renderer for command symbols
-     */
-    function RenderSymbol({ latex }) {
-        const symbolRef = useRef(null)
-
-        useEffect(() => {
-            if (symbolRef.current) {
-                katex.render(latex, symbolRef.current, {
-                    throwOnError: false,
-                    displayMode: false,
-                })
-            }
-        }, [latex])
-
-        return <div ref={ symbolRef }></div>
-    }
-    
-    /**
      * Slate's onChange - fired whenever content or selection changes
      * Rule 1: "If we are typing, show the list"
      */
@@ -253,6 +195,10 @@ export default function TestCommandInput() {
     }, [editor, checkIfInCommandInput])
     
     const renderElement = useCallback(props => {
+        if (props.element.type === 'math') {
+            return <MathElement {...props} />
+        }
+        
         if (props.element.type === 'command-input') {
             // Get the path of this specific command-input element
             const elementPath = ReactEditor.findPath(editor, props.element)
@@ -269,7 +215,9 @@ export default function TestCommandInput() {
     }, [handleBackslashClick, editor])
     
     /**
-     * Handle arrow key navigation into command-input elements
+     * Handle keyboard navigation and command parsing
+     * - Arrow keys: Navigate into/out of command-input elements naturally
+     * - Space key: Convert command-input to math symbol when pressed after component
      */
     const handleKeyDown = useCallback((event) => {
         const { selection } = editor
@@ -277,23 +225,85 @@ export default function TestCommandInput() {
         // Only handle collapsed selections (cursor, not ranges)
         if (!selection || !Range.isCollapsed(selection)) return
         
+        /**
+         * Space key: Convert command-input to math symbol
+         * Triggers when space is pressed immediately after a command-input element
+         */
+        if (event.key === ' ') {
+            const { anchor } = selection
+            const [node, path] = Editor.node(editor, anchor.path)
+            
+            // Check if we're at the start of a text node (position 0)
+            if (anchor.offset === 0) {
+                // Look at the previous node
+                const prevEntry = Editor.previous(editor, { at: path })
+                
+                if (prevEntry) {
+                    const [prevNode, prevPath] = prevEntry
+                    
+                    // Is it a command-input?
+                    if (prevNode.type === 'command-input') {
+                        event.preventDefault()
+                        
+                        // Get the text content from the command-input
+                        const commandText = Node.string(prevNode)
+                        
+                        // Parse it to LaTeX
+                        const latexSymbol = parseCommandToLatex(commandText, commands)
+                        
+                        // Replace command-input with math node at current cursor position
+                        Transforms.removeNodes(editor, { at: prevPath })
+                        Transforms.insertNodes(editor, {
+                            type: 'math',
+                            latex: latexSymbol,
+                            children: [{ text: '' }]
+                        })
+                        
+                        // Insert the space as regular text after the math node
+                        //Transforms.insertText(editor, ' ')
+                        
+                        return
+                    }
+                }
+            }
+        }
+        
+        /**
+         * Arrow Right: Navigate into command-input when at boundary
+         * Fixes the "double skip" when entering component from the left
+         */
         if (event.key === 'ArrowRight') {
             const { anchor } = selection
             const [node, path] = Editor.node(editor, anchor.path)
             
-            // Are we at the end of current text node?
+            // Case 1: Exiting command-input from inside
+            // Check if we're at the END of a text node inside a command-input
+            try {
+                const [parentNode, parentPath] = Editor.parent(editor, path)
+                if (parentNode.type === 'command-input' && anchor.offset === node.text.length) {
+                    event.preventDefault()
+                    
+                    // Move to the position immediately AFTER the command-input
+                    const afterPoint = Editor.after(editor, parentPath)
+                    if (afterPoint) {
+                        Transforms.select(editor, afterPoint)
+                    }
+                    return
+                }
+            } catch (e) {
+                // Not in a command-input, continue
+            }
+            
+            // Case 2: Entering command-input from outside (existing logic)
             if (node.text && anchor.offset === node.text.length) {
-                // Get the next node in document order
                 const nextEntry = Editor.next(editor, { at: path })
                 
                 if (nextEntry) {
                     const [nextNode, nextPath] = nextEntry
                     
-                    // Is the next node a command-input?
                     if (nextNode.type === 'command-input') {
                         event.preventDefault()
                         
-                        // Move cursor to the START of the command-input's first text child
                         const firstTextPath = [...nextPath, 0]
                         Transforms.select(editor, {
                             anchor: { path: firstTextPath, offset: 0 },
@@ -303,24 +313,45 @@ export default function TestCommandInput() {
                 }
             }
         }
-        
+        /**
+         * Arrow Left: Navigate into command-input when at boundary
+         * Fixes the "double skip" when entering component from the right
+         */
         if (event.key === 'ArrowLeft') {
             const { anchor } = selection
             const [node, path] = Editor.node(editor, anchor.path)
-            
-            // Are we at the start of current text node?
+
+            // Case 1: Exiting command-input from inside (going left)
+            // Check if we're at the START of a text node inside a command-input
+            try {
+                // Parent to position of current cursor
+                const [parentNode, parentPath] = Editor.parent(editor, path)
+                // inside of command input & cursor is at an extrema
+                if (parentNode.type === 'command-input'&& anchor.offset === node.text.length) {
+                    event.preventDefault()
+
+                    // Move to the position immediately BEFORE the command-input
+                    const beforePoint = Editor.before(editor, parentPath)
+                    if (beforePoint) {
+                        Transforms.select(editor, beforePoint)
+                    }
+                    return
+                }
+            }
+            catch (e) {
+                // Not in a command-input, continue
+            }
+
+            // Case 2: Entering command-input from outside (existing logic)
             if (anchor.offset === 0) {
-                // Get the previous node in document order
                 const prevEntry = Editor.previous(editor, { at: path })
                 
                 if (prevEntry) {
                     const [prevNode, prevPath] = prevEntry
                     
-                    // Is the previous node a command-input?
                     if (prevNode.type === 'command-input') {
                         event.preventDefault()
                         
-                        // Move cursor to the END of the command-input's last text child
                         const lastTextPath = [...prevPath, 0]
                         const lastTextNode = Node.get(editor, lastTextPath)
                         const lastOffset = lastTextNode.text ? lastTextNode.text.length : 0
