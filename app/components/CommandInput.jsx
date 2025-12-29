@@ -30,7 +30,7 @@ export default function CommandInput({ attributes, children, element, onBackslas
                     e.stopPropagation() // Stop Slate from handling this click
                     onBackslashClick?.()
                 }}>
-                \
+                /
             </span>
             
             {/* Right side: editable content (controlled by Slate) */}

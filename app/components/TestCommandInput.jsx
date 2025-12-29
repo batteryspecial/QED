@@ -176,7 +176,7 @@ export default function TestCommandInput() {
     
     /**
      * Callback to show palette when user clicks the backslash
-     * Rule 2: "Click the \ span, show it"
+     * Rule 2: "Click the / span, show it"
      */
     const handleBackslashClick = useCallback((elementPath) => {
         console.log("Backslash clicked!")
