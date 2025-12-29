@@ -8,31 +8,14 @@ import katex from 'katex'
 import 'katex/dist/katex.min.css'
 
 import CommandInput from '../components/CommandInput'
-import { commands } from '../../lib/command/CommandList.js'
+import { commands, RenderSymbol } from '../../lib/command/CommandList.js'
 import { parseCommandToLatex } from '../../lib/command/CommandParser.js'
 import { withCommandInput } from '../../lib/command/CommandInline.js'
 
-import '../sections/canvas.css'
+import './canvas.css'
 
-const HMR_ID = Math.random() // Optional. A randomly generated ID on every browser reload
-
-/**
- * Simple LaTeX renderer for command symbols
- */
-function RenderSymbol({ latex }) {
-    const symbolRef = useRef(null)
-
-    useEffect(() => {
-        if (symbolRef.current) {
-            katex.render(latex, symbolRef.current, {
-                throwOnError: false,
-                displayMode: false,
-            })
-        }
-    }, [latex])
-
-    return <div ref={symbolRef}></div>
-}
+// A randomly generated ID on every browser reload (Next.js Hot Module Reload to enforce modifications to MathNodes)
+const HMR_ID = Math.random() 
 
 /**
  * MathElement - Renders inline LaTeX math symbols
@@ -53,14 +36,7 @@ function MathElement({ attributes, element, children }) {
     }, [element.latex])
 
     return (
-        <span 
-            {...attributes} 
-            contentEditable={false} 
-            className={`relative inline-flex items-center rounded-md select-none -my-1 ${
-                selected && focused ? 'ring-1 ring-blue-500' : ''
-            }`} 
-            style={{ verticalAlign: 'middle' }}
-        >
+        <span {...attributes} contentEditable={false} className={`relative inline-flex items-center rounded-md select-none -my-1 align-middle ${ (selected && focused) ? 'ring-1 ring-blue-500' : '' }`}>
             {/* Visible LaTeX Content */}
             <span ref={ref} contentEditable={false} />
 
@@ -73,9 +49,9 @@ function MathElement({ attributes, element, children }) {
 }
 
 /**
- * Test component for CommandInput functionality
+ * Component for CommandInput functionality
  */
-export default function TestCommandInput() {
+export default function ProofCanvas() {
     const [showCommands, setShowCommands] = useState(false)
     const [commandPos, setCommandPos] = useState(null)
     const [activeCommandInputPath, setActiveCommandInputPath] = useState(null)
@@ -85,8 +61,8 @@ export default function TestCommandInput() {
         
         // Extend to recognize math as inline void element
         const { isInline, isVoid } = e
-        e.isInline = element => element.type === 'math' ? true : isInline(element)
-        e.isVoid = element => element.type === 'math' ? true : isVoid(element)
+        e.isInline = element => (element.type === 'math') ? true : isInline(element)
+        e.isVoid = element => (element.type === 'math') ? true : isVoid(element)
         
         return e
     }, [HMR_ID])
@@ -96,19 +72,23 @@ export default function TestCommandInput() {
         {
             type: 'paragraph',
             children: [
-                { text: 'Type here before ' },
+                { 
+                    text: 'Type here before ' 
+                },
                 { 
                     type: 'command-input', 
                     children: [{ text: 'forall' }] 
                 },
-                { text: ' and type here after' },
+                { 
+                    text: ' and type here after' 
+                },
             ],
         },
     ], [])
     
     /**
      * Check if cursor is currently inside a command-input element
-     * This is the Slate way - read from editor.selection, not DOM
+     * Slate prefers to read from editor.selection, not DOM
      */
     const checkIfInCommandInput = useCallback(() => {
         const { selection } = editor
@@ -131,13 +111,15 @@ export default function TestCommandInput() {
                 const rect = domNode.getBoundingClientRect()
                 const distanceToBottom = window.innerHeight - rect.bottom
                 
+                // If the commandList reaches the bottom, reveal up
                 if (distanceToBottom < 160) {
                     setCommandPos({
                         top: rect.top + window.scrollY,
                         left: rect.left + window.scrollX,
                         isAbove: true
                     })
-                } else {
+                } 
+                else {
                     setCommandPos({
                         top: rect.bottom + window.scrollY,
                         left: rect.left + window.scrollX,
@@ -147,18 +129,20 @@ export default function TestCommandInput() {
                 
                 // Show palette when typing (selection changed while in command-input)
                 setShowCommands(true)
-            } else {
+            } 
+            else {
                 setShowCommands(false)
                 setActiveCommandInputPath(null)
             }
-        } catch (e) {
+        } 
+        catch (e) {
             setShowCommands(false)
             setActiveCommandInputPath(null)
         }
     }, [editor])
 
     /**
-     * Slate's onChange - fired whenever content or selection changes
+     * Slate's onChange fires whenever content or selection changes
      * Rule 1: "If we are typing, show the list"
      */
     const handleChange = useCallback(() => {
@@ -191,9 +175,7 @@ export default function TestCommandInput() {
         })
         
         // Force a re-check to show palette
-        setTimeout(() => {
-            checkIfInCommandInput()
-        }, 0)
+        setTimeout(() => { checkIfInCommandInput()}, 0)
     }, [editor, checkIfInCommandInput])
     
     const renderElement = useCallback(props => {
@@ -206,19 +188,16 @@ export default function TestCommandInput() {
             const elementPath = ReactEditor.findPath(editor, props.element)
             
             return (
-                <CommandInput 
-                    {...props} 
-                    onBackslashClick={() => handleBackslashClick(elementPath)}
-                />
+                <CommandInput {...props} onBackslashClick={() => handleBackslashClick(elementPath)}/>
             )
         }
         
-        return <p {...props.attributes}>{props.children}</p>
+        return (<p {...props.attributes}>{props.children}</p>)
     }, [handleBackslashClick, editor])
     
     /**
      * Handle keyboard navigation and command parsing
-     * - Arrow keys: Navigate into/out of command-input elements naturally
+     * - Arrow keys: Navigate in/out of command-input elements naturally
      * - Space key: Convert command-input to math symbol when pressed after component
      */
     const handleKeyDown = useCallback((event) => {
@@ -228,7 +207,7 @@ export default function TestCommandInput() {
         if (!selection || !Range.isCollapsed(selection)) return
         
         /**
-         * Space key: Convert command-input to math symbol
+         * [Space Key] converts command-input to math symbol
          * Triggers when space is pressed immediately after a command-input element
          */
         if (event.key === ' ') {
@@ -268,7 +247,7 @@ export default function TestCommandInput() {
         }
         
         /**
-         * Arrow Right: Navigate into command-input when at boundary
+         * (Arrow Right) Navigate into command-input when at boundary
          * Fixes the "double skip" when entering component from the left
          */
         if (event.key === 'ArrowRight') {
@@ -314,7 +293,7 @@ export default function TestCommandInput() {
             }
         }
         /**
-         * Arrow Left: Navigate into command-input when at boundary
+         * (Arrow Left) Navigate into command-input when at boundary
          * Fixes the "double skip" when entering component from the right
          */
         if (event.key === 'ArrowLeft') {
@@ -367,20 +346,13 @@ export default function TestCommandInput() {
     }, [editor])
 
 
-    
+    /**
+     * The HTML section
+     * - Fully black background, pre-rendered text
+     * - Written in Slate.js, includes the command list UI
+     */
     return (
         <div className="w-full min-h-screen bg-black p-8">
-            <h1 className="text-white text-2xl mb-4">
-                Test: Command Palette
-            </h1>
-            <p className="text-gray-400 text-sm mb-8">
-                The command palette should show when:
-                <br />• Typing inside the command box
-                <br />• Clicking the \ symbol
-                <br />
-                <br />It should hide when clicking outside.
-            </p>
-            
             <Slate key={HMR_ID} editor={editor} initialValue={initialValue} onChange={handleChange}>
                 <Editable
                     renderElement={renderElement}
@@ -393,29 +365,30 @@ export default function TestCommandInput() {
             
             {/* Command Palette */}
             {showCommands && commandPos && (
-                <div
-                    className="absolute command-palette overflow-y-auto max-h-46 p-2 mt-2 rounded-lg bg-gray-900 border border-gray-600 editor"
-                    style={{
-                        top: `${commandPos.top}px`,
-                        left: `${commandPos.left}px`,
-                        transform: commandPos.isAbove ? 'translateY(-105%)' : 'none'
-                    }}
-                >
+                <div className="absolute command-palette overflow-y-auto max-h-46 p-2 mt-2 rounded-lg bg-gray-900 border border-gray-600 editor" 
+                style={{
+                    top: `${commandPos.top}px`,
+                    left: `${commandPos.left}px`,
+                    transform: commandPos.isAbove ? 'translateY(-105%)' : 'none'
+                }}>
                     {commands.map((cmd, idx) => (
-                        <div
-                            key={idx}
-                            className="flex flex-row items-center text-white px-3 py-2 hover:bg-gray-800 rounded-lg cursor-pointer"
-                            onMouseDown={(e) => {
-                                e.preventDefault() // Prevents selection from moving
-                                handleCommandSelect(cmd)
-                            }}
-                        >
+                        <div key={idx} className="flex flex-row items-center text-white px-3 py-2 hover:bg-gray-800 rounded-lg cursor-pointer" 
+                        onMouseDown={(e) => { 
+                            e.preventDefault() // Prevents selection from moving
+                            handleCommandSelect(cmd)
+                        }}>
                             <div className="w-10 h-10 flex items-center justify-center bg-gray-800 rounded text-xl text-white">
                                 <RenderSymbol latex={cmd.symbol} />
                             </div>
 
                             <div className="ms-3 flex flex-col">
                                 <div className="text-white font-mono text-sm">
+                                    { 
+                                    /**
+                                     * Only shows the first shorthand! Many shorthands work 
+                                     * In the future, users will be able to customize their own shorthand
+                                     */
+                                    }
                                     {cmd.command[0]}
                                 </div>
                                 <div className="text-gray-400 text-xs mt-1">
