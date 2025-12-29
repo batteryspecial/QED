@@ -290,7 +290,8 @@ export default function TestCommandInput() {
                     }
                     return
                 }
-            } catch (e) {
+            } 
+            catch (e) {
                 // Not in a command-input, continue
             }
             
@@ -327,7 +328,7 @@ export default function TestCommandInput() {
                 // Parent to position of current cursor
                 const [parentNode, parentPath] = Editor.parent(editor, path)
                 // inside of command input & cursor is at an extrema
-                if (parentNode.type === 'command-input'&& anchor.offset === node.text.length) {
+                if (parentNode.type === 'command-input' && anchor.offset === 0) {
                     event.preventDefault()
 
                     // Move to the position immediately BEFORE the command-input
@@ -416,7 +417,7 @@ export default function TestCommandInput() {
 
                             <div className="ms-3 flex flex-col">
                                 <div className="text-white font-mono text-sm">
-                                    {cmd.command}
+                                    {cmd.command[0]}
                                 </div>
                                 <div className="text-gray-400 text-xs mt-1">
                                     {cmd.description}
