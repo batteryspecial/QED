@@ -7,7 +7,7 @@ import { withHistory } from 'slate-history'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 
-import CommandInput from '../components/CommandInput'
+import CommandInput from '../components/CommandInput.jsx'
 import { commands, templateCommands, RenderSymbol } from '../../lib/command/CommandList.js'
 import { parseCommandToLatex } from '../../lib/command/CommandParser.js'
 import { withCommandInput } from '../../lib/command/CommandInline.js'
