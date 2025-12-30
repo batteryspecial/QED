@@ -15,9 +15,15 @@ export default function CommandInput({ attributes, children, element, onBackslas
     const selected = useSelected()
     const focused = useFocused()
 
+    // Check if content is truly empty (no text or only ZWS)
+    const isEmpty = !element.children[0]?.text || element.children[0].text === '\u200B'
+
     return (
-        <span  {...attributes} className={`inline-flex items-center rounded-md mx-0.5 transition-all 
-        ${(selected && focused) ? 'ring-2 ring-blue-500' : 'ring-1 ring-gray-600' }`}>
+        <span  {...attributes} className={`inline-flex items-center rounded-md mx-0.5 transition-all ${
+        (selected && focused)
+            ? (isEmpty) ? 'ring-2 ring-red-500' : 'ring-2 ring-blue-500'
+            : (isEmpty) ? 'ring-1 ring-red-600' : 'ring-1 ring-gray-600'
+        }`}>
             {/* Left side: backslash trigger */}
             <span contentEditable={false} className="bg-black text-gray-400 text-xs px-1.5 py-1 rounded-l-md select-none cursor-pointer"
             onMouseDown={(e) => {

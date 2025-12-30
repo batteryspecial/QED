@@ -228,7 +228,7 @@ export default function ProofCanvas() {
                         
                         // Get the text content from the command-input
                         const commandText = Node.string(prevNode)
-                        
+
                         // Parse it to LaTeX
                         const latexSymbol = parseCommandToLatex(commandText, commands, templateCommands)
                         
@@ -343,8 +343,43 @@ export default function ProofCanvas() {
                 }
             }
         }
-    }, [editor])
 
+        /**
+         * (Backspace) Fixes empty component delete bug
+         * When cursor is inside an empty command-input, backspace removes the entire component
+         */
+        if (event.key === 'Backspace') {
+            const { anchor } = selection
+            const [node, path] = Editor.node(editor, anchor.path)
+
+            try {
+                const [parentNode, parentPath] = Editor.parent(editor, path)
+
+                // are we in the commandInput component?
+                if (parentNode.type === 'command-input') {
+                    const commandText = Node.string(parentNode)
+                    
+                    // If empty delete the component
+                    if (commandText.trim() === '') {
+                        event.preventDefault()
+
+                        // Remove the entire component
+                        Transforms.removeNodes(editor, { at: parentPath })
+
+                        // Cursor automatically moves to where the component was
+                        // because Slate is a good library and does the job right
+                        
+                        return
+                    }
+                }
+
+                
+            }
+            catch (e) {
+                // Not in commandInput
+            }
+        }
+    }, [editor])
 
     /**
      * The HTML section
