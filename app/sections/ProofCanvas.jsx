@@ -8,7 +8,7 @@ import katex from 'katex'
 import 'katex/dist/katex.min.css'
 
 import CommandInput from '../components/CommandInput'
-import { commands, RenderSymbol } from '../../lib/command/CommandList.js'
+import { commands, templateCommands, RenderSymbol } from '../../lib/command/CommandList.js'
 import { parseCommandToLatex } from '../../lib/command/CommandParser.js'
 import { withCommandInput } from '../../lib/command/CommandInline.js'
 
@@ -230,7 +230,7 @@ export default function ProofCanvas() {
                         const commandText = Node.string(prevNode)
                         
                         // Parse it to LaTeX
-                        const latexSymbol = parseCommandToLatex(commandText, commands)
+                        const latexSymbol = parseCommandToLatex(commandText, commands, templateCommands)
                         
                         // Replace command-input with math node at current cursor position
                         Transforms.removeNodes(editor, { at: prevPath })
