@@ -8,9 +8,11 @@ import katex from 'katex'
 import 'katex/dist/katex.min.css'
 
 import CommandInput from '../components/CommandInput.jsx'
-import { commands, templateCommands, RenderSymbol } from '../../lib/command/CommandList.js'
 import { parseCommandToLatex } from '../../lib/command/CommandParser.js'
-import { withCommandInput } from '../../lib/command/CommandInline.js'
+import { commands, templateCommands } from '../../lib/command/CommandList.js'
+import { filterCommands, handleCommandSelection } from '../../lib/command/AutoComplete.js'
+import { withCommandInput, getCommandInputContext, getCommandInputText, shouldShowAutocomplete } from '../../lib/command/CommandInline.js'
+import CommandPalette from '../components/CommandPalette.jsx'
 
 import './canvas.css'
 
@@ -55,6 +57,8 @@ export default function ProofCanvas() {
     const [showCommands, setShowCommands] = useState(false)
     const [commandPos, setCommandPos] = useState(null)
     const [activeCommandInputPath, setActiveCommandInputPath] = useState(null)
+    const [filteredCommands, setFilteredCommands] = useState([]) // Filtered commands
+    const [selectedIndex, setSelectedIndex] = useState(0) // For arrow key navigation
     
     const editor = useMemo(() => {
         const e = withHistory(withCommandInput(withReact(createEditor())))
@@ -88,56 +92,30 @@ export default function ProofCanvas() {
     
     /**
      * Check if cursor is currently inside a command-input element
-     * Slate prefers to read from editor.selection, not DOM
+     * Updates autocomplete state based on cursor position
      */
     const checkIfInCommandInput = useCallback(() => {
-        const { selection } = editor
+        const context = getCommandInputContext(editor)
         
-        if (!selection || !Range.isCollapsed(selection)) {
-            setShowCommands(false)
-            setActiveCommandInputPath(null)
-            return
-        }
-        
-        try {
-            // Get the parent node at current cursor position
-            const [node, path] = Editor.parent(editor, selection.focus.path)
+        if (context.isInCommandInput) {
+            setActiveCommandInputPath(context.path)
+            setCommandPos(context.position)
             
-            if (node.type === 'command-input') {
-                setActiveCommandInputPath(path)
-                
-                // Calculate position for palette
-                const domNode = ReactEditor.toDOMNode(editor, node)
-                const rect = domNode.getBoundingClientRect()
-                const distanceToBottom = window.innerHeight - rect.bottom
-                
-                // If the commandList reaches the bottom, reveal up
-                if (distanceToBottom < 160) {
-                    setCommandPos({
-                        top: rect.top + window.scrollY,
-                        left: rect.left + window.scrollX,
-                        isAbove: true
-                    })
-                } 
-                else {
-                    setCommandPos({
-                        top: rect.bottom + window.scrollY,
-                        left: rect.left + window.scrollX,
-                        isAbove: false
-                    })
-                }
-                
-                // Show palette when typing (selection changed while in command-input)
-                setShowCommands(true)
-            } 
-            else {
-                setShowCommands(false)
-                setActiveCommandInputPath(null)
-            }
-        } 
-        catch (e) {
+            // Filter commands based on current input
+            const inputText = getCommandInputText(context.node)
+            const filtered = filterCommands(commands, inputText)
+            //console.log('matches from filterCommands:', filtered, 'is array?', Array.isArray(filtered))
+            setFilteredCommands(filtered)
+            
+            // Reset selection if it's out of bounds
+            setSelectedIndex(prev => prev >= filtered.length ? 0 : prev)
+            
+            // Show palette
+            setShowCommands(shouldShowAutocomplete(filtered, true))
+        } else {
             setShowCommands(false)
             setActiveCommandInputPath(null)
+            setSelectedIndex(0)
         }
     }, [editor])
 
@@ -151,14 +129,11 @@ export default function ProofCanvas() {
     
     /**
      * Handle command selection from palette
+     * Uses Autocomplete module function
      */
-    const handleCommandSelect = useCallback((cmd) => {
-        if (!activeCommandInputPath) return
-        
-        // TODO: Replace command-input with math symbol (Step 5)
-        console.log('Selected command:', cmd)
-        setShowCommands(false)
-    }, [activeCommandInputPath])
+    const handleCommandSelect = useCallback((matchData) => {
+        handleCommandSelection(editor, activeCommandInputPath, matchData, setShowCommands)
+    }, [activeCommandInputPath, editor])
     
     /**
      * Callback to show palette when user clicks the backslash
@@ -399,40 +374,14 @@ export default function ProofCanvas() {
             </Slate>
             
             {/* Command Palette */}
-            {showCommands && commandPos && (
-                <div className="absolute command-palette overflow-y-auto max-h-46 p-2 mt-2 rounded-lg bg-gray-900 border border-gray-600 editor" 
-                style={{
-                    top: `${commandPos.top}px`,
-                    left: `${commandPos.left}px`,
-                    transform: commandPos.isAbove ? 'translateY(-105%)' : 'none'
-                }}>
-                    {commands.map((cmd, idx) => (
-                        <div key={idx} className="flex flex-row items-center text-white px-3 py-2 hover:bg-gray-800 rounded-lg cursor-pointer" 
-                        onMouseDown={(e) => { 
-                            e.preventDefault() // Prevents selection from moving
-                            handleCommandSelect(cmd)
-                        }}>
-                            <div className="w-10 h-10 flex items-center justify-center bg-gray-800 rounded text-xl text-white">
-                                <RenderSymbol latex={cmd.symbol} />
-                            </div>
-
-                            <div className="ms-3 flex flex-col">
-                                <div className="text-white font-mono text-sm">
-                                    { 
-                                    /**
-                                     * Only shows the first shorthand! Many shorthands work 
-                                     * In the future, users will be able to customize their own shorthand
-                                     */
-                                    }
-                                    {cmd.command[0]}
-                                </div>
-                                <div className="text-gray-400 text-xs mt-1">
-                                    {cmd.description}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+            {showCommands && commandPos && filteredCommands.length > 0 && (
+                <CommandPalette
+                    filteredCommands={filteredCommands}
+                    position={commandPos}
+                    editor={editor}
+                    activeCommandInputPath={activeCommandInputPath}
+                    onSelect={handleCommandSelect}
+                />
             )}
         </div>
     )
