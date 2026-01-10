@@ -1,4 +1,4 @@
-import ProofCanvas from './src/sections/ProofCanvas.jsx'
+import ProofCanvas from './canvas/ProofCanvas'
 
 export default function Home() {
   return (
