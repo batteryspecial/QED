@@ -9,8 +9,7 @@ import 'katex/dist/katex.min.css'
 
 import CommandInput from '../components/CommandInput.jsx'
 import { handleKeyPress } from '../../lib/keybinds/KeyDown.js'
-import { parseCommandToLatex } from '../../lib/command/CommandParser.js'
-import { commands, templateCommands } from '../../lib/command/CommandList.js'
+import { commands, nodisplay } from '../../lib/command/CommandList.js'
 import { filterCommands, handleCommandSelection } from '../../lib/command/AutoComplete.js'
 import { withCommandInput, getCommandInputContext, getCommandInputText, shouldShowAutocomplete } from '../../lib/command/CommandInline.js'
 import CommandPalette from '../components/CommandPalette.jsx'
@@ -211,6 +210,7 @@ export default function ProofCanvas() {
                     filteredCommands={filteredCommands}
                     position={commandPos}
                     editor={editor}
+                    nodisplay={nodisplay}
                     activeCommandInputPath={activeCommandInputPath}
                     onSelect={handleCommandSelect}
                 />
