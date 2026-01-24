@@ -1,7 +1,11 @@
-import ProofCanvas from './canvas/ProofCanvas'
+'use client';
 
-export default function Home() {
+import Home from './views/Home'
+
+export default function App() {
   return (
-    <ProofCanvas />
+    <>
+      <Home />
+    </>
   );
 }

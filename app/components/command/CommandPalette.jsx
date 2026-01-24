@@ -1,6 +1,6 @@
 `use client`
-import { RenderSymbol } from "../../lib/command/CommandList.js"
-import { getTypedText, getBoldedAliasParts } from "../../lib/command/AutoComplete.js"
+import { RenderSymbol } from "../../../lib/command/CommandList.js"
+import { getTypedText, getBoldedAliasParts } from "../../../lib/command/AutoComplete.js"
 
 /**
  * CommandPalette - Dropdown list of filtered commands

@@ -7,12 +7,12 @@ import { withHistory } from 'slate-history'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 
-import CommandInput from '../components/CommandInput.jsx'
+import CommandInput from '../components/command/CommandInput.jsx'
 import { handleKeyPress } from '../../lib/keybinds/KeyDown.js'
 import { commands, nodisplay } from '../../lib/command/CommandList.js'
 import { filterCommands, handleCommandSelection } from '../../lib/command/AutoComplete.js'
 import { withCommandInput, getCommandInputContext, getCommandInputText, shouldShowAutocomplete } from '../../lib/command/CommandInline.js'
-import CommandPalette from '../components/CommandPalette.jsx'
+import CommandPalette from '../components/command/CommandPalette.jsx'
 
 import './canvas.css'
 
@@ -193,12 +193,12 @@ export default function ProofCanvas() {
      * - Written in Slate.js, includes the command list UI
      */
     return (
-        <div className="w-full min-h-screen bg-black p-8">
+        <div className="min-h-screen p-8 pt-25 bg-[#fcfcfc]">
             <Slate key={HMR_ID} editor={editor} initialValue={initialValue} onChange={handleChange}>
                 <Editable
                     renderElement={renderElement}
                     onKeyDown={handleKeyDown}
-                    className="text-white text-lg leading-relaxed outline-none"
+                    className="text-lg leading-relaxed outline-none"
                     placeholder="Start typing..."
                     spellCheck={false}
                 />

@@ -1,0 +1,20 @@
+'use client';
+
+import Navbar from '../components/layout/Navbar'
+import ProofCanvas from '../canvas/ProofCanvas'
+
+export default function Home() {
+  return (
+    <>
+      <Navbar 
+        onBack={() => console.log('Back')}
+        onCut={() => console.log('Cut')}
+        onCopy={() => console.log('Copy')}
+        onPaste={() => console.log('Paste')}
+        onAdd={() => console.log('Add block')}
+      />
+      <ProofCanvas />
+      <div style={{ height: '2000px', background: 'red' }}>Test scroll</div>
+    </>
+  );
+}
