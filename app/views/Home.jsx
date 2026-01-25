@@ -1,7 +1,7 @@
 'use client';
 
 import Navbar from '../components/layout/Navbar'
-import ProofCanvas from '../canvas/ProofCanvas'
+import Block from '../components/layout/Block'
 
 export default function Home() {
   return (
@@ -13,7 +13,7 @@ export default function Home() {
         onPaste={() => console.log('Paste')}
         onAdd={() => console.log('Add block')}
       />
-      <ProofCanvas />
+      <Block />
       <div style={{ height: '2000px', background: 'red' }}>Test scroll</div>
     </>
   );

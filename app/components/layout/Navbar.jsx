@@ -29,7 +29,7 @@ export default function Navbar({ onBack, onCopy, onCut, onPaste, onAdd }) {
   }
 
   return (
-    <div className="fixed top-6 start-7.5 z-10">
+    <div className="fixed top-6 start-4 z-10 ">
       <div className='backdrop-blur-md bg-white/10 border border-white/20 shadow-xl rounded-full'>
         <div className="w-full px-8">
           <nav className="h-full flex items-center justify-between gap-12">

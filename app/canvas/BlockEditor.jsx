@@ -53,7 +53,7 @@ function MathElement({ attributes, element, children }) {
 /**
  * Component for CommandInput functionality
  */
-export default function ProofCanvas() {
+export default function BlockEditor() {
     const [showCommands, setShowCommands] = useState(false)
     const [commandPos, setCommandPos] = useState(null)
     const [activeCommandInputPath, setActiveCommandInputPath] = useState(null)
@@ -193,7 +193,7 @@ export default function ProofCanvas() {
      * - Written in Slate.js, includes the command list UI
      */
     return (
-        <div className="min-h-screen p-8 pt-25 bg-[#fcfcfc]">
+        <div className="p-8 bg-[#fcfcfc]">
             <Slate key={HMR_ID} editor={editor} initialValue={initialValue} onChange={handleChange}>
                 <Editable
                     renderElement={renderElement}
