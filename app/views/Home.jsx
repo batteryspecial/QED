@@ -14,7 +14,6 @@ export default function Home() {
         onAdd={() => console.log('Add block')}
       />
       <Block />
-      <div style={{ height: '2000px', background: 'red' }}>Test scroll</div>
     </>
   );
 }
