@@ -38,7 +38,7 @@ function MathElement({ attributes, element, children }) {
     }, [element.latex])
 
     return (
-        <span {...attributes} contentEditable={false} className={`relative inline-flex items-center rounded-md select-none -my-1 align-middle ${ (selected && focused) ? 'ring-1 ring-blue-500' : '' }`}>
+        <span {...attributes} contentEditable={false} className={`relative inline-flex items-center rounded-md select-none align-middle ${ (selected && focused) ? 'ring-1 ring-blue-500' : '' }`}>
             {/* Visible LaTeX Content */}
             <span ref={ref} contentEditable={false} />
 
@@ -193,7 +193,7 @@ export default function BlockEditor() {
      * - Written in Slate.js, includes the command list UI
      */
     return (
-        <div className="p-8 bg-[#fcfcfc]">
+        <div className="p-1 bg-[#fcfcfc]">
             <Slate key={HMR_ID} editor={editor} initialValue={initialValue} onChange={handleChange}>
                 <Editable
                     renderElement={renderElement}

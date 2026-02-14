@@ -15,7 +15,7 @@ import { getTypedText, getBoldedAliasParts } from "../../../lib/command/AutoComp
 export default function CommandPalette({filteredCommands, position, editor, nodisplay, activeCommandInputPath, onSelect}) {
     return (
         <>
-            <div className="absolute command-palette overflow-y-auto max-h-46 p-2 mt-2 rounded-lg bg-gray-900 border border-gray-600 editor" 
+            <div className="absolute command-palette overflow-y-auto max-h-46 p-2 mt-2 rounded-lg bg-gray-300 border border-gray-600 editor z-10" 
                 style={{
                     top: `${position.top}px`,
                     left: `${position.left}px`,
@@ -32,18 +32,18 @@ export default function CommandPalette({filteredCommands, position, editor, nodi
                         return (
                             <div 
                                 key={`${cmd.symbol}-${idx}`} 
-                                className="flex flex-row items-center text-white px-3 py-2 hover:bg-gray-800 rounded-lg cursor-pointer" 
+                                className="flex flex-row items-center text-black px-3 py-2 hover:bg-slate-300 rounded-lg cursor-pointer" 
                                 onMouseDown={(e) => { 
                                     e.preventDefault()
                                     onSelect(matchData)
                                 }}
                             >
-                                <div className="w-10 h-10 flex items-center justify-center bg-gray-800 rounded text-xl text-white">
+                                <div className="w-10 h-10 flex items-center justify-center bg-gray-400 rounded text-xl text-black">
                                     <RenderSymbol latex={cmd.symbol} />
                                 </div>
 
                                 <div className="ms-3 flex flex-col">
-                                    <div className="text-white font-mono text-sm">
+                                    <div className="text-black font-mono text-sm">
                                         {matchLength > 0 ? (
                                             <>
                                                 <span className="font-bold">{boldPart}</span>
@@ -53,7 +53,7 @@ export default function CommandPalette({filteredCommands, position, editor, nodi
                                             displayAlias
                                         )}
                                     </div>
-                                    <div className="text-gray-400 text-xs mt-1">
+                                    <div className="text-black text-xs mt-1">
                                         {cmd.description}
                                     </div>
                                 </div>
